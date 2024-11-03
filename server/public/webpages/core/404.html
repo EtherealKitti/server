@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<title>404</title>
+		<meta name="description" content="The webpage doesn't exist or can't be found D:">
+		<link rel="icon" type="image/x-icon" href="/media/favicon.png">
+	</head>
+	
+	<body>
+		<style>
+			@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Quicksand:wght@700&display=swap");
+			
+			body {
+				background-color: rgb(50,50,50);
+				overflow: hidden;
+			}
+			
+			body * {
+				width: fit-content;
+				user-select: none;
+				font-family: "Quicksand","Noto Color Emoji";
+				color: rgb(255,255,255);
+				background-color: rgb(35,35,35);
+				border-radius: 15px;
+			}
+			
+			a {
+				color: rgb(122,0,122);
+			}
+			
+			a:hover {
+				color: rgb(255,0,0);
+			}
+			
+			::-webkit-scrollbar {
+				width: 0px;
+			}
+		</style>
+		
+		<script>
+			const check = setInterval(() => {
+				if (document.querySelector("#errorMessage")) {
+					document.querySelector("#errorMessage").textContent = document.querySelector("#errorMessage").textContent.replaceAll("loadPath",window.location.pathname);
+					removeInterval(check);
+				}
+			},1);
+		</script>
+		
+		<div style="font-size: 50px; background-color: transparent">404</div>
+		<div id="errorMessage" style="background-color: transparent">"loadPath" is a no go :P</div>
+	</body>
+</html>
