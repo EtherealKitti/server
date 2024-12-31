@@ -1,0 +1,79 @@
+<html>
+	<head>
+		<title>Meh Website :3</title>
+		<meta name="description" content="The landing page of meh website :3">
+		<link rel="icon" type="image/x-icon" href="/media/favicon.png">
+	</head>
+	
+	<body>
+		<style>
+			@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Quicksand:wght@700&display=swap");
+			
+			body {
+				background-color: rgb(50,50,50);
+				overflow: hidden;
+			}
+			
+			body * {
+				width: fit-content;
+				user-select: none;
+				font-family: "Quicksand","Noto Color Emoji";
+				color: rgb(255,255,255);
+				background-color: rgb(35,35,35);
+				border-radius: 15px;
+			}
+			
+			a {
+				color: rgb(122,0,122);
+			}
+			
+			a:hover {
+				color: rgb(255,0,0);
+			}
+			
+			::-webkit-scrollbar {
+				width: 0px;
+			}
+		</style>
+		
+		<script>
+			function webSocket(reconnect,callback) {
+				const webSocketClient = new WebSocket(`${document.location.origin.replace("https","wss")}/core/index.ts`);
+				
+				window.addEventListener("offline",webSocketClient.close,{once: true});
+				
+				if (reconnect) {
+					window.addEventListener("online",() => {
+						webSocket(reconnect,callback);
+					},{["once"]: true});
+				}
+				
+				webSocketClient.addEventListener("open",() => {
+					callback(webSocketClient);
+				});
+			}
+			
+			webSocket(false,(webSocketClient) => {
+				webSocketClient.send(JSON.stringify({
+					["operation"]: "load"
+				}));
+				
+				webSocketClient.addEventListener("message",(webSocketMessage) => {
+					webSocketMessage = JSON.parse(webSocketMessage.data);
+					
+					for (let location of webSocketMessage.data.locations) {
+						let anchor = document.createElement("a");
+						anchor.href = `${document.location.origin}/${location}`;
+						anchor.style = "display: block; background-color: transparent";
+						anchor.textContent = `/${location}`;
+						document.querySelector("#location-list").appendChild(anchor);
+					}
+					
+					webSocketClient.close();
+				});
+			});
+		</script>
+		
+		<div id="location-list" style="background-color: transparent"></div>
+	</body>
+</html>

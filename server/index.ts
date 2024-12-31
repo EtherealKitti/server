@@ -1,32 +1,32 @@
 interface Dictionary<T> {
-    [Key: string]: T;
+    [Key: String]: T;
 }
 
+const http: Object<any> = require("http");
 const express: any = require("express");
-const app: Dictionary<any> = express();
-const fs: Dictionary<any> = require("fs");
-const path: Dictionary<any> = require("path");
-const webSocket: Dictionary<any> = require("ws");
-const http: Dictionary<any> = require("http");
-const sqlite: Dictionary<any> = require("sqlite3");
+const app: Object<any> = express();
+const fileSystem: Object<any> = require("fs");
+const path: Object<any> = require("path");
+const sqlite: Object<any> = require("sqlite3");
+const webSocket: Object<any> = require("ws");
 
-const utlity: Dictionary<Function> = {
-	["database"]: (fileDirectory: string,databaseName: string) => {
-		const databasePath: string = `${fileDirectory.replace("requestHandlers","database")}/${databaseName}.db`;
+const utility: Object<Function> = {
+	["database"]: (fileDirectory: String,databaseName: String): Object<any> => {
+		const databasePath: String = `${fileDirectory.replace("scripts","database")}/${databaseName}.db`;
 		
-		if (!fs.existsSync(databasePath.replaceAll(`/${databaseName}.db`,""))) {
-			fs.mkdirSync(path.dirname(databasePath),{recursive: true});
+		if (!fileSystem.existsSync(databasePath.replaceAll(`/${databaseName}.db`,""))) {
+			fileSystem.mkdirSync(path.dirname(databasePath),{["recursive"]: true});
 		}
     	
-		let database: Dictionary<any> = new sqlite.Database(databasePath);
+		let database: Object<any> = new sqlite.Database(databasePath);
 		
-		database.arrayToRows = (array: Array<Array<string | number | boolean>>) => {
-			let values: string = "";
+		database.arrayToRowsString = (array: Array<Array<String | Number | Boolean>>): String => {
+			let values: String = "";
 			
-			for (const row of array) {
-				let rowString: string = "";
+			for (const row: Object of array) {
+				let rowString: String = "";
 				
-				for (const element of row) {
+				for (const element: String | Number | Boolean of row) {
 					if (typeof(element) === "string") {
 						rowString += `'${element.replaceAll("'","<u0027>")}',`;
 					} else {
@@ -40,11 +40,11 @@ const utlity: Dictionary<Function> = {
 			return values.slice(0,-1);
 		};
 		
-		database.formatJsonInRows = (rows: Array<Dictionary<any>> | Dictionary<any>) => {
-			let formattedRows: Array<Dictionary<any>> | Dictionary<any> = rows;
+		database.formatJsonInRows = (rows: Array<Object<any>> | Object<any>): undefined => {
+			let formattedRows: Array<Object<any>> | Object<any> = rows;
 			
-			const formatRow = (dictionary: Dictionary<any>) => {
-				for (const key of Object.keys(dictionary)) {
+			const formatRow = (dictionary: Object<any>) => {
+				for (const key: String of Object.keys(dictionary)) {
 					if (typeof(dictionary[key]) === "string") {
 						if (!dictionary[key].match("^[0-9]+$")) {
 							try {
@@ -56,7 +56,7 @@ const utlity: Dictionary<Function> = {
 			};
 			
 			if (Array.isArray(formattedRows)) {
-				for (const dictionary of formattedRows) {
+				for (const dictionary: Object of formattedRows) {
 					formatRow(dictionary);
 				}
 			} else {
@@ -72,71 +72,77 @@ const utlity: Dictionary<Function> = {
 
 app.use(express.static(`${__dirname}/public`));
 
-const server: Dictionary<any> = http.createServer(app);
-const webSocketServer: Dictionary<any> = new webSocket.Server({server});
+const server: Object<any> = http.createServer(app);
+const webSocketServer: Object<any> = new webSocket.Server({server});
 
-app.get("*",(request: Dictionary<any>,response: Dictionary<any>) => {
-    const sendWebpage = (path: string) => {
-        if (fs.existsSync(`${__dirname}/public/webpages/${path}.html`) || fs.existsSync(`${__dirname}/public/webpages/${path}`)) {
-            if (fs.existsSync(`${__dirname}/public/webpages/${path}.html`)) {
-                response.sendFile(`${__dirname}/public/webpages/${path}.html`);
-            } else {
-                if (fs.existsSync(`${__dirname}/public/webpages/${path}/index.html`)) {
-                    response.sendFile(`${__dirname}/public/webpages/${path}/index.html`);
-                } else {
-                    if (fs.existsSync(`${__dirname}/public/webpages/${path}/index`)) {
-                        let oneHtmlFile: boolean = true;
-						
-                        for (const fileName of fs.readdirSync(`${__dirname}/public/webpages/${path}/index`)) {
-                            if (fileName !== "index.html") {
-                                if (fileName.includes(".html")) {
-                                    oneHtmlFile = false;
-                                }
-                            }
-                        }
-                        
-                        if (oneHtmlFile) {
-                            response.sendFile(`${__dirname}/public/webpages/${path}/index/index.html`);
-                        } else {
-                            sendWebpage("core/404");
-                        }
-                    } else {
-                        sendWebpage("core/404");
-                    }
-                }
-            }
-        } else {
-            sendWebpage("core/404");
-        }
-    };
-    
-    if (request.url === "/") {
-        sendWebpage("core/index");
-    } else {
-        if (request.url.match(/[^/]*$/)[0] !== "index") {
-			if (request.path.split("/")[1] !== "proxy") {
-            	sendWebpage(`general${request.url.split("?")[0]}`);
+app.all("*",(request: Object<any>,response: Dictionary<any>): String | null => {
+	const requestUrl: String = request.params["0"];
+
+	if (!(requestUrl.match(/\.[a-zA-Z0-9]+$/) || [null])[0]) {
+		const getFilePath = (filePath: String | undefined,backend: Boolean | undefined): String | null => {
+			const fileTypeSubPath: String = backend ? "/backend/scripts" : "/frontend/webpages";
+	
+			if (filePath === undefined) {
+				filePath = `${__dirname}${fileTypeSubPath}/core/404`;
 			} else {
-				require(`${__dirname}/requestHandlers/core/proxy.ts`)(webSocketServer,utlity,request,response);
+				if (filePath === "/") {
+					filePath = `${__dirname}${fileTypeSubPath}/core/index`;
+				} else {
+					filePath = `${__dirname}${fileTypeSubPath}/general${filePath}`;
+				}
 			}
-        } else {
-			sendWebpage("core/404");
-        }
-    }
+
+			if (fileSystem.existsSync(`${filePath}${backend ? ".ts" : ".html"}`)) {
+				return `${filePath}${backend ? ".ts" : ".html"}`;
+			} else {
+				if (fileSystem.existsSync(`${filePath}/index${backend ? ".ts" : ".html"}`)) {
+					return `${filePath}/index${backend ? ".ts" : ".html"}`;
+				} else {
+					return null;
+				}
+			}
+		};
+		
+		let backendPath: String | null = getFilePath(requestUrl,true);
+		
+		if (backendPath) {
+			const backendMethodFunction = require(backendPath)[request.method.toLowerCase()];
+		
+			if (backendMethodFunction) {
+				backendMethodFunction(webSocketServer,utility,request,response);
+			}
+		}
+
+		if (request.method === "GET") {
+			const frontendPath: String | null = getFilePath(requestUrl);
+	
+			if (frontendPath) {
+				response.sendFile(frontendPath);
+			} else {
+				if (!getFilePath(requestUrl,true)) {
+					response.sendFile(getFilePath());
+				}
+			}
+		}
+
+		console.log(`Method: ${request.method}\nUrl: ${requestUrl}\nBackend path: ${backendPath}\nFrontend path: ${getFilePath(requestUrl)}\nBackend file exists: ${fileSystem.existsSync(backendPath)}\nFrontend file exists: ${fileSystem.existsSync(getFilePath(requestUrl))}\n`);
+	}
 });
 
-server.listen(1533);
+server.listen(1532);
 
-function interateDirectory(directory: string) {
-	for (const component of fs.readdirSync(directory)) {
-		if (component !== "proxy.ts") {
-			if (fs.existsSync(`${directory}/${component.split(".")[0]}.ts`)) {
-				require(`${directory}/${component}`)(webSocketServer,utlity);
-			} else {
-				interateDirectory(`${directory}/${component}`);
+function interateDirectory(directory: String): undefined {
+	for (const component: String of fileSystem.readdirSync(directory)) {
+		if (fileSystem.existsSync(`${directory}/${component.split(".")[0]}.ts`)) {
+			const initializeFunction = require(`${directory}/${component}`).initialize;
+
+			if (initializeFunction) {
+				initializeFunction(webSocketServer,utility);
 			}
+		} else {
+			interateDirectory(`${directory}/${component}`);
 		}
 	}
 }
 
-interateDirectory(`${path.dirname(__filename)}/requestHandlers`);
+interateDirectory(`${__dirname}/backend/scripts`);

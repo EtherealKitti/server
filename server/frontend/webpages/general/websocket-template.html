@@ -1,0 +1,71 @@
+<html>
+	<head>
+		<title>WebSocket Template</title>
+		<meta name="description" content="WebSocket! :D">
+		<link rel="icon" type="image/x-icon" href="/media/favicon.png">
+	</head>
+	
+	<body>
+		<style>
+			@import url("https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&family=Quicksand:wght@700&display=swap");
+			
+			body {
+				background-color: rgb(50,50,50);
+				overflow: hidden;
+			}
+			
+			body * {
+				width: fit-content;
+				user-select: none;
+				font-family: "Quicksand","Noto Color Emoji";
+				color: rgb(255,255,255);
+				background-color: rgb(35,35,35);
+				border-radius: 15px;
+			}
+			
+			a {
+				color: rgb(122,0,122);
+			}
+			
+			a:hover {
+				color: rgb(255,0,0);
+			}
+			
+			::-webkit-scrollbar {
+				width: 0px;
+			}
+		</style>
+		
+		<script>
+			function webSocket(reconnect,callback) {
+				const webSocketClient = new WebSocket(`${document.location.origin.replace("https","wss")}/general/websocket-template.ts`);
+				
+				window.addEventListener("offline",webSocketClient.close,{["once"]: true});
+				
+				if (reconnect) {
+					window.addEventListener("online",() => {
+						webSocket(reconnect,callback);
+					},{["once"]: true});
+				}
+				
+				webSocketClient.addEventListener("open",() => {
+					callback(webSocketClient);
+				});
+			}
+			
+			webSocket(true,(webSocketClient) => {
+				webSocketClient.send(JSON.stringify({
+					["operation"]: "greeting",
+					["data"]: {
+						["message"]: "Hewo server :3"
+					}
+				}));
+				
+				webSocketClient.addEventListener("message",(webSocketMessage) => {
+					webSocketMessage = JSON.parse(webSocketMessage.data);
+					alert(JSON.stringify(webSocketMessage,null,5));
+				});
+			});
+		</script>
+	</body>
+</html>
